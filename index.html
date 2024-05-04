@@ -22,7 +22,7 @@
             const file = event.target.files[0];
             const handleError = function (errorMessage) {
                 document.getElementById('select-another-file').style.display = 'block';
-                errorOutput.textContent = 'Invalid JSON file: ' + errorMessage;
+                errorOutput.textContent = 'Error: ' + errorMessage;
                 errorOutput.style.display = 'block';
                 loader.style.display = 'none';
             }
@@ -35,8 +35,57 @@
                             jsonData.name = "Unknown";
                         }
                         document.getElementById('chat-name').textContent = jsonData.name;
+                        if (!jsonData.hasOwnProperty('messages')) {
+                            handleError('JSON file selected does not have a property "messages", make sure valid Telegram chat history export is selected.');
+                            return;
+                        }
+                        let messages = jsonData.messages;
+                        let messagesCount = messages.length;
+                        let textMessagesCount = 0;
+                        document.getElementById('total-messages').textContent = messagesCount;
+                        let authors = {};
+                        for (let messageId = 0; messageId < messagesCount; messageId++) {
+                            let message = messages[messageId];
+                            if (!message.hasOwnProperty('type')) {
+                                if (message.hasOwnProperty('id')) {
+                                    console.error(`Message ${message.id} has no property "type"`);
+                                } else {
+                                    console.error('Message has no property "type" and no "id"');
+                                }
+                                continue;
+                            }
+                            if (message.type !== 'message') {
+                                continue;
+                            }
+                            textMessagesCount++;
+                            if (!message.hasOwnProperty('from')) {
+                                if (message.hasOwnProperty('id')) {
+                                    console.error(`Message ${message.id} has no property "from"`);
+                                } else {
+                                    console.error('Message has no property "from" and no "id"');
+                                }
+                                continue;
+                            }
 
+                            let author = message.from;
+                            if (!authors.hasOwnProperty(author)) {
+                                authors[author] = {
+                                    name: author,
+                                    totalMessages: 1,
+                                }
+                            } else {
+                                authors[author].totalMessages++;
+                            }
+                        }
+                        document.getElementById('text-messages').textContent = textMessagesCount.toString();
+                        let participantsTableBodyHTML = ''
 
+                        for (const authorName in authors) {
+                            let author = authors[authorName];
+                           participantsTableBodyHTML += `<tr><td>${author.name}</td><td>${author.totalMessages}</td></tr>`
+                        }
+                        document.getElementById('participants-table-body').innerHTML = participantsTableBodyHTML;
+                        participantsTableBodyHTML = undefined;
 
                         output.style.display = 'block';
                         // error.style.display = 'none';
@@ -44,7 +93,7 @@
                         document.getElementById('select-another-file').style.display = 'block';
 
                     } catch (error) {
-                        handleError(error.message);
+                        handleError(error + "<br>" + error.stack);
                     }
                 });
                 reader.addEventListener('error', function (e) {
@@ -77,6 +126,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
             margin: 20px;
+            display: block;
+            float: left;
         }
 
         #file-input {
@@ -109,11 +160,6 @@
             display: none;
         }
 
-        #group-chat-header {
-            margin: 0;
-            font-size: 1.5em;
-        }
-
         #loader {
             font-size: 36px;
         }
@@ -136,11 +182,23 @@
 <a id="select-another-file" class="button" style="display: none" href="javascript:reset();">Analyze another file</a>
 <div id="loader" style="display: none" class="container">Processing...</div>
 <div id="output">
-    <h2 id="group-chat-header" class="container">Chat name: <span id="chat-name"></span></h2>
+    <div class="container">
+        <h2>Stats</h2>
+        <h3>Chat name: <span id="chat-name"></span></h3>
+        <h3>Total messages: <span id="total-messages"></span></h3>
+        <h3>Text messages: <span id="text-messages"></span></h3>
+    </div>
     <div class="container">
     <h2>Participants</h2>
-        <table id="participants-table">
-
+        <table>
+            <thead>
+            <tr>
+                <td>Name</td>
+                <td>Total Messages</td>
+            </tr>
+            </thead>
+            <tbody id="participants-table-body">
+            </tbody>
         </table>
     </div>
 </div>
