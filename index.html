@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Telegram Group Chat Stats</title>
+    <title>Telegram Chat Stats</title>
     <script>
         function reset() {
             document.getElementById('loader').style.display = 'none';
@@ -34,7 +34,9 @@
                         if (!jsonData.hasOwnProperty('name')) {
                             jsonData.name = "Unknown";
                         }
-                        document.getElementById('group-chat-name').textContent = jsonData.name;
+                        document.getElementById('chat-name').textContent = jsonData.name;
+
+
 
                         output.style.display = 'block';
                         // error.style.display = 'none';
@@ -74,6 +76,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
+            margin: 20px;
         }
 
         #file-input {
@@ -83,13 +86,13 @@
         .button {
             display: inline-block;
             padding: 10px 20px;
-            margin-top: 10px;
             background-color: #007BFF;
             color: #fff;
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
             text-decoration: none;
+            margin: 10px;
         }
 
         #file-label:hover {
@@ -104,11 +107,6 @@
 
         #output {
             display: none;
-            margin-top: 20px;
-            background-color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         #group-chat-header {
@@ -129,12 +127,22 @@
     <p>The file will not be uploaded to the server, it will be processed in your browser</p>
     <label id="file-label" class="button" for="file-input">Choose File</label>
     <input type="file" id="file-input" accept=".json" onchange="handleFileSelect(event)">
+    <div id="settings">
+<!--        <h4>Settings</h4>-->
+<!--        <input name="max_participants" type="number" value="10">-->
+    </div>
 </div>
 <div id="error" class="container"></div>
 <a id="select-another-file" class="button" style="display: none" href="javascript:reset();">Analyze another file</a>
 <div id="loader" style="display: none" class="container">Processing...</div>
 <div id="output">
-    <h2 id="group-chat-header">Chat name: <span id="group-chat-name"></span></h2>
+    <h2 id="group-chat-header" class="container">Chat name: <span id="chat-name"></span></h2>
+    <div class="container">
+    <h2>Participants</h2>
+        <table id="participants-table">
+
+        </table>
+    </div>
 </div>
 
 </body>
