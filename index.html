@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Telegram Group Chat Stats</title>
+    <script>
+        function reset() {
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('output').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('select-another-file').style.display = 'none';
+            document.getElementById('file-container').style.display = 'block';
+        }
+
+        function handleFileSelect(event) {
+            const loader = document.getElementById('loader');
+            const output = document.getElementById('output');
+            const errorOutput = document.getElementById('error');
+            loader.style.display = 'block';
+            output.style.display = 'none';
+            document.getElementById('file-container').style.display = 'none';
+            const file = event.target.files[0];
+            const handleError = function (errorMessage) {
+                document.getElementById('select-another-file').style.display = 'block';
+                errorOutput.textContent = 'Invalid JSON file: ' + errorMessage;
+                errorOutput.style.display = 'block';
+                loader.style.display = 'none';
+            }
+            if (file) {
+                const reader = new FileReader();
+                reader.addEventListener('load', function (e) {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+                        if (!jsonData.hasOwnProperty('name')) {
+                            jsonData.name = "Unknown";
+                        }
+                        document.getElementById('group-chat-name').textContent = jsonData.name;
+
+                        output.style.display = 'block';
+                        // error.style.display = 'none';
+                        loader.style.display = 'none';
+                        document.getElementById('select-another-file').style.display = 'block';
+
+                    } catch (error) {
+                        handleError(error.message);
+                    }
+                });
+                reader.addEventListener('error', function (e) {
+                    handleError('Failed to parse selected file');
+                });
+                reader.readAsText(file);
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+
+        #file-label:hover {
+            background-color: #0056b3;
+        }
+
+        #error {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+
+        #output {
+            display: none;
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        #group-chat-header {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        #loader {
+            font-size: 36px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="file-container" class="container">
+    <h2>Select your result.json file</h2>
+    <p>In Telegram Desktop use "Export Chat history" function. Select format JSON and select the resulting file.</p>
+    <p>The file will not be uploaded to the server, it will be processed in your browser</p>
+    <label id="file-label" class="button" for="file-input">Choose File</label>
+    <input type="file" id="file-input" accept=".json" onchange="handleFileSelect(event)">
+</div>
+<div id="error" class="container"></div>
+<a id="select-another-file" class="button" style="display: none" href="javascript:reset();">Analyze another file</a>
+<div id="loader" style="display: none" class="container">Processing...</div>
+<div id="output">
+    <h2 id="group-chat-header">Chat name: <span id="group-chat-name"></span></h2>
+</div>
+
+</body>
+</html>
