@@ -12,6 +12,10 @@
             document.getElementById('file-container').style.display = 'block';
         }
 
+        function formatDate(date)
+        {
+            return date.toISOString().split('T')[0];
+        }
         function handleFileSelect(event) {
             const loader = document.getElementById('loader');
             const output = document.getElementById('output');
@@ -26,6 +30,7 @@
                 errorOutput.style.display = 'block';
                 loader.style.display = 'none';
             }
+
             if (file) {
                 const reader = new FileReader();
                 reader.addEventListener('load', function (e) {
@@ -44,37 +49,40 @@
                         let textMessagesCount = 0;
                         document.getElementById('total-messages').textContent = messagesCount;
                         let authors = {};
-                        for (let messageId = 0; messageId < messagesCount; messageId++) {
+                        const requiredProperties = ['type', 'from', 'date_unixtime']
+                        messageLoop: for (let messageId = 0; messageId < messagesCount; messageId++) {
                             let message = messages[messageId];
-                            if (!message.hasOwnProperty('type')) {
-                                if (message.hasOwnProperty('id')) {
-                                    console.error(`Message ${message.id} has no property "type"`);
-                                } else {
-                                    console.error('Message has no property "type" and no "id"');
+                            if (message.hasOwnProperty('type') && message.type !== 'message') {
+                                continue;
+                            }
+                            for (let requiredPropertyIndex=0; requiredPropertyIndex<requiredProperties.length; requiredPropertyIndex++) {
+                                let property =requiredProperties[requiredPropertyIndex];
+                                if (!message.hasOwnProperty(property)) {
+                                    if (message.hasOwnProperty('id')) {
+                                        console.error(`Message ${message.id} has no property "${property}"`);
+                                    } else {
+                                        console.error(`Message has no property "${property}" and no "id"`);
+                                    }
+                                    continue messageLoop;
                                 }
-                                continue;
                             }
-                            if (message.type !== 'message') {
-                                continue;
-                            }
+
                             textMessagesCount++;
-                            if (!message.hasOwnProperty('from')) {
-                                if (message.hasOwnProperty('id')) {
-                                    console.error(`Message ${message.id} has no property "from"`);
-                                } else {
-                                    console.error('Message has no property "from" and no "id"');
-                                }
-                                continue;
-                            }
+
 
                             let author = message.from;
                             if (!authors.hasOwnProperty(author)) {
                                 authors[author] = {
                                     name: author,
                                     totalMessages: 1,
+                                    firstMessage: message.date_unixtime,
+                                    lastMessage: message.date_unixtime,
                                 }
                             } else {
-                                authors[author].totalMessages++;
+                                let authorObj = authors[author];
+                                authorObj.totalMessages++;
+                                authorObj.lastMessage = Math.max(message.date_unixtime, authorObj.lastMessage);
+                                authorObj.firstMessage = Math.min(message.date_unixtime, authorObj.firstMessage);
                             }
                         }
                         document.getElementById('text-messages').textContent = textMessagesCount.toString();
@@ -98,6 +106,8 @@
 <td>${authorIndex+1}</td>
 <td>${author.name}</td>
 <td>${author.totalMessages}</td>
+<td>${formatDate(new Date(author.firstMessage*1000))}</td>
+<td>${formatDate(new Date(author.lastMessage*1000))}</td>
 </tr>`
                         }
                         document.getElementById('participants-table-body').innerHTML = participantsTableBodyHTML;
@@ -217,7 +227,9 @@
             <tr>
                 <td>Rank</td>
                 <td>Name</td>
-                <td>Messages Sent</td>
+                <td>Messages</td>
+                <td>First Message</td>
+                <td>Last Message</td>
             </tr>
             </thead>
             <tbody id="participants-table-body">
