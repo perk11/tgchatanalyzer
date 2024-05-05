@@ -95,6 +95,7 @@
                             lastMessageUnixTimestamp = Math.max(message.date_unixtime, lastMessageUnixTimestamp);
                         }
                         document.getElementById('text-messages').textContent = textMessagesCount.toString();
+                        let numberFormat = Intl.NumberFormat();
                         let participantsTableBodyHTML = ''
 
                         let authorsArray = Object.values(authors);
@@ -114,13 +115,13 @@
                             let daysSinceJoin = (lastMessageUnixTimestamp - author.firstMessage)/(3600*24);
                            participantsTableBodyHTML += `
 <tr>
-<td>${authorIndex+1}</td>
+<td>${numberFormat.format(authorIndex+1)}</td>
 <td style="max-width:200px; text-overflow: ellipsis">${author.name}</td>
-<td>${author.totalMessages}</td>
+<td>${numberFormat.format(author.totalMessages)}</td>
 <td>${formatDate(new Date(author.firstMessage*1000))}</td>
 <td>${formatDate(new Date(author.lastMessage*1000))}</td>
-<td>${(author.totalMessages/daysSinceJoin).toFixed(1)}</td>
-<td>${author.activeDays.length}</td>
+<td>${numberFormat.format((author.totalMessages/daysSinceJoin).toFixed(1))}</td>
+<td>${numberFormat.format(author.activeDays.length)}</td>
 </tr>`
                         }
                         document.getElementById('participants-table-body').innerHTML = participantsTableBodyHTML;
