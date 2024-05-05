@@ -72,18 +72,25 @@
 
 
                             let author = message.from;
+                            let messageDay = new Date(message.date_unixtime*1000).toISOString().split('T')[0]
                             if (!authors.hasOwnProperty(author)) {
                                 authors[author] = {
                                     name: author,
                                     totalMessages: 1,
                                     firstMessage: message.date_unixtime,
                                     lastMessage: message.date_unixtime,
+                                    activeDays: [
+                                        messageDay,
+                                    ]
                                 }
                             } else {
                                 let authorObj = authors[author];
                                 authorObj.totalMessages++;
                                 authorObj.lastMessage = Math.max(message.date_unixtime, authorObj.lastMessage);
                                 authorObj.firstMessage = Math.min(message.date_unixtime, authorObj.firstMessage);
+                                if (authorObj.activeDays.indexOf(messageDay) === -1) {
+                                    authorObj.activeDays.push(messageDay);
+                                }
                             }
                             lastMessageUnixTimestamp = Math.max(message.date_unixtime, lastMessageUnixTimestamp);
                         }
@@ -111,6 +118,7 @@
 <td>${formatDate(new Date(author.firstMessage*1000))}</td>
 <td>${formatDate(new Date(author.lastMessage*1000))}</td>
 <td>${(author.totalMessages/((lastMessageUnixTimestamp - author.firstMessage)/(3600*24))).toFixed(1)}</td>
+<td>${author.activeDays.length}</td>
 </tr>`
                         }
                         document.getElementById('participants-table-body').innerHTML = participantsTableBodyHTML;
@@ -237,6 +245,7 @@
                 <td>First Message</td>
                 <td>Last Message</td>
                 <td>Msg/Day<br><small>(since first)</small></td>
+                <td>Active Days<br><small>(at least one msg)</small></td>
             </tr>
             </thead>
             <tbody id="participants-table-body">
