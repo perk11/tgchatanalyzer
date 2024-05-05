@@ -93,7 +93,12 @@
                         console.log(authorsArray);
                         for (let authorIndex = 0; authorIndex<authorsArray.length; authorIndex++) {
                             let author = authorsArray[authorIndex];
-                           participantsTableBodyHTML += `<tr><td>${author.name}</td><td>${author.totalMessages}</td></tr>`
+                           participantsTableBodyHTML += `
+<tr>
+<td>${authorIndex+1}</td>
+<td>${author.name}</td>
+<td>${author.totalMessages}</td>
+</tr>`
                         }
                         document.getElementById('participants-table-body').innerHTML = participantsTableBodyHTML;
                         participantsTableBodyHTML = undefined;
@@ -210,6 +215,7 @@
         <table>
             <thead>
             <tr>
+                <td>Rank</td>
                 <td>Name</td>
                 <td>Messages Sent</td>
             </tr>
