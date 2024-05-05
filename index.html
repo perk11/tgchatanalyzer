@@ -72,7 +72,7 @@
 
 
                             let author = message.from;
-                            let messageDay = new Date(message.date_unixtime*1000).toISOString().split('T')[0]
+                            let messageDay = formatDate(new Date(message.date_unixtime*1000))
                             if (!authors.hasOwnProperty(author)) {
                                 authors[author] = {
                                     name: author,
@@ -107,9 +107,11 @@
                             }
                             return 0;
                         });
+                        console.log(lastMessageUnixTimestamp);
                         console.log(authorsArray);
                         for (let authorIndex = 0; authorIndex<authorsArray.length; authorIndex++) {
                             let author = authorsArray[authorIndex];
+                            let daysSinceJoin = (lastMessageUnixTimestamp - author.firstMessage)/(3600*24);
                            participantsTableBodyHTML += `
 <tr>
 <td>${authorIndex+1}</td>
@@ -117,7 +119,7 @@
 <td>${author.totalMessages}</td>
 <td>${formatDate(new Date(author.firstMessage*1000))}</td>
 <td>${formatDate(new Date(author.lastMessage*1000))}</td>
-<td>${(author.totalMessages/((lastMessageUnixTimestamp - author.firstMessage)/(3600*24))).toFixed(1)}</td>
+<td>${(author.totalMessages/daysSinceJoin).toFixed(1)}</td>
 <td>${author.activeDays.length}</td>
 </tr>`
                         }
