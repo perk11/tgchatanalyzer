@@ -22,7 +22,7 @@
             const file = event.target.files[0];
             const handleError = function (errorMessage) {
                 document.getElementById('select-another-file').style.display = 'block';
-                errorOutput.textContent = 'Error: ' + errorMessage;
+                errorOutput.innerHTML = 'Error: ' + errorMessage.replace("\n", '<br>');
                 errorOutput.style.display = 'block';
                 loader.style.display = 'none';
             }
@@ -80,8 +80,19 @@
                         document.getElementById('text-messages').textContent = textMessagesCount.toString();
                         let participantsTableBodyHTML = ''
 
-                        for (const authorName in authors) {
-                            let author = authors[authorName];
+                        let authorsArray = Object.values(authors);
+                        authorsArray.sort(function (a,b) {
+                            if (a.totalMessages > b.totalMessages) {
+                                return -1;
+                            }
+                            if (a.totalMessages < b.totalMessages) {
+                                return 1;
+                            }
+                            return 0;
+                        });
+                        console.log(authorsArray);
+                        for (let authorIndex = 0; authorIndex<authorsArray.length; authorIndex++) {
+                            let author = authorsArray[authorIndex];
                            participantsTableBodyHTML += `<tr><td>${author.name}</td><td>${author.totalMessages}</td></tr>`
                         }
                         document.getElementById('participants-table-body').innerHTML = participantsTableBodyHTML;
@@ -93,7 +104,7 @@
                         document.getElementById('select-another-file').style.display = 'block';
 
                     } catch (error) {
-                        handleError(error + "<br>" + error.stack);
+                        handleError(error + "\n" + error.stack);
                     }
                 });
                 reader.addEventListener('error', function (e) {
@@ -200,7 +211,7 @@
             <thead>
             <tr>
                 <td>Name</td>
-                <td>Total Messages</td>
+                <td>Messages Sent</td>
             </tr>
             </thead>
             <tbody id="participants-table-body">
