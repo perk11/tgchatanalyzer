@@ -47,6 +47,7 @@
                         let messages = jsonData.messages;
                         let messagesCount = messages.length;
                         let textMessagesCount = 0;
+                        let lastMessageUnixTimestamp = 0;
                         document.getElementById('total-messages').textContent = messagesCount;
                         let authors = {};
                         const requiredProperties = ['type', 'from', 'date_unixtime']
@@ -84,6 +85,7 @@
                                 authorObj.lastMessage = Math.max(message.date_unixtime, authorObj.lastMessage);
                                 authorObj.firstMessage = Math.min(message.date_unixtime, authorObj.firstMessage);
                             }
+                            lastMessageUnixTimestamp = Math.max(message.date_unixtime, lastMessageUnixTimestamp);
                         }
                         document.getElementById('text-messages').textContent = textMessagesCount.toString();
                         let participantsTableBodyHTML = ''
@@ -104,10 +106,11 @@
                            participantsTableBodyHTML += `
 <tr>
 <td>${authorIndex+1}</td>
-<td>${author.name}</td>
+<td style="max-width:200px; text-overflow: ellipsis">${author.name}</td>
 <td>${author.totalMessages}</td>
 <td>${formatDate(new Date(author.firstMessage*1000))}</td>
 <td>${formatDate(new Date(author.lastMessage*1000))}</td>
+<td>${(author.totalMessages/((lastMessageUnixTimestamp - author.firstMessage)/(3600*24))).toFixed(1)}</td>
 </tr>`
                         }
                         document.getElementById('participants-table-body').innerHTML = participantsTableBodyHTML;
@@ -190,7 +193,10 @@
         }
         thead {
             font-weight: bold;
-            font-size: 20px;
+            font-size: 17px;
+        }
+        td {
+            padding-left: 15px;
         }
         table {
             text-align: left;
@@ -218,7 +224,7 @@
         <h2>Stats</h2>
         <h3>Chat name: <span id="chat-name"></span></h3>
         <h3>Total messages: <span id="total-messages"></span></h3>
-        <h3>Text messages: <span id="text-messages"></span></h3>
+        <h3>Non-service messages: <span id="text-messages"></span></h3>
     </div>
     <div class="container">
     <h2>Participants</h2>
@@ -230,6 +236,7 @@
                 <td>Messages</td>
                 <td>First Message</td>
                 <td>Last Message</td>
+                <td>Msg/Day<br><small>(since first)</small></td>
             </tr>
             </thead>
             <tbody id="participants-table-body">
