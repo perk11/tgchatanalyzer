@@ -26,8 +26,8 @@ function parseResultJSON(data) {
         let messages = jsonData.messages;
         let messagesCount = messages.length;
         let textMessagesCount = 0;
+        let stickerMessagesCount = 0;
         let lastMessageUnixTimestamp = 0;
-        document.getElementById('total-messages').textContent = messagesCount;
         let authors = {};
         let stickers = {};
         const requiredProperties = ['type', 'from', 'date_unixtime']
@@ -48,7 +48,6 @@ function parseResultJSON(data) {
                 }
             }
 
-            textMessagesCount++;
 
 
             let author = message.from;
@@ -69,8 +68,10 @@ function parseResultJSON(data) {
                     console.error(`Message ${message.id} with media_type "sticker" has no property "file"`);
                     continue;
                 }
+                stickerMessagesCount++;
             } else {
                 words = countWords(parseIntoWords(message));
+                textMessagesCount++;
             }
             if (!authors.hasOwnProperty(author)) {
                 authors[author] = {
@@ -122,7 +123,6 @@ function parseResultJSON(data) {
             }
             lastMessageUnixTimestamp = Math.max(message.date_unixtime, lastMessageUnixTimestamp);
         }
-        document.getElementById('text-messages').textContent = textMessagesCount.toString();
         let numberFormat = Intl.NumberFormat();
         let participantsTableBodyHTML = ''
 
@@ -249,6 +249,10 @@ function parseResultJSON(data) {
 <td>${topUsers}</td>
 </tr>`
         }
+        document.getElementById('total-messages').textContent = numberFormat.format(messagesCount);
+        document.getElementById('text-messages').textContent = numberFormat.format(textMessagesCount);
+        document.getElementById('sticker-messages').textContent = numberFormat.format(stickerMessagesCount);
+        document.getElementById('unique-stickers').textContent = numberFormat.format(stickersArray.length);
         document.getElementById('stickers-table-body').innerHTML = stickerTableBodyHTML;
         output.style.display = 'block';
         // error.style.display = 'none';

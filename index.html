@@ -53,10 +53,17 @@
             background-color: #0056b3;
         }
 
+        #chat-name {
+            font-style: italic;
+        }
         #error {
             color: red;
             margin-top: 10px;
             display: none;
+        }
+        #stats {
+            margin-top: 10px;
+            text-align: left;
         }
 
         #output {
@@ -110,11 +117,18 @@
 <a id="select-another-file" class="button" style="display: none" href="javascript:reset();">Analyze another export</a>
 <div id="loader" style="display: none" class="container"></div>
 <div id="output">
+    <div class="container" style="float:none;">
+        <h2>Analysis of <span id="chat-name"></span></h2>
+    </div>
+    <div style="clear: both"></div>
     <div class="container">
         <h2>Stats</h2>
-        <h3>Chat name: <span id="chat-name"></span></h3>
-        <h3>Total messages: <span id="total-messages"></span></h3>
-        <h3>Non-service messages: <span id="text-messages"></span></h3>
+        <div id="stats">
+            <h3>Total messages: <span id="total-messages"></span></h3>
+            <h3>Text/Media messages: <span id="text-messages"></span></h3>
+            <h3>Messages with stickers: <span id="sticker-messages"></span></h3>
+            <h3>Unique stickers: <span id="unique-stickers"></span></h3>
+        </div>
         <div id="stickers-container" style="margin-top:30px;">
             <h2>Top Stickers</h2>
             <table>
