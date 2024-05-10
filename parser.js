@@ -175,7 +175,7 @@ function parseResultJSON(data) {
             }
             return 0;
         });
-        let numberOfTopStickersToDisplay = Math.min(100, stickersArray.length)
+        let numberOfTopStickersToDisplay = Math.min(200, stickersArray.length)
         let queuedFileReads = [];
         for (let stickerIndex = 0; stickerIndex < numberOfTopStickersToDisplay; stickerIndex++) {
             let sticker = stickersArray[stickerIndex];
