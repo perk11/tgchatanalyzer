@@ -190,6 +190,7 @@ function parseResultJSON(data) {
             if (topUsersNumber > 0) {
                 topUsers += usersArray[topUsersNumber - 1][0] + ': ' + usersArray[topUsersNumber - 1][1];
             }
+            let stickerElementId=`sticker-${sticker.file}`;
             if (directoryContents.hasOwnProperty(sticker.file)) {
                 queuedFileReads.push(function () {
                     if (sticker.file.endsWith('.webp') || sticker.file.endsWith('.webm')) {
@@ -202,18 +203,22 @@ function parseResultJSON(data) {
                             } else if (sticker.file.endsWith('.webm')) {
                                 span.innerHTML = `<video autoplay loop src="${e.target.result}">`;
                             } else {
-                                document.getElementById(`sticker-${sticker.file}`).innerHTML = "<span class='sticker-load-error'>Failed to load sticker</span>";
+                                document.getElementById(stickerElementId).innerHTML = "<span class='sticker-load-error'>Tried to load unsupported format</span>";
                                 return;
                             }
-                            document.getElementById(`sticker-${sticker.file}`).appendChild(span);
+                            document.getElementById(stickerElementId).appendChild(span);
                         }
                         reader.onerror = function (e) {
-                            document.getElementById(`sticker-${sticker.file}`).innerHTML = "<span class='sticker-load-error'>Failed to load sticker</span>";
+                            document.getElementById(stickerElementId).innerHTML = "<span class='sticker-load-error'>Failed to load sticker</span>";
                         }
                     } else {
-                        document.getElementById(`sticker-${sticker.file}`).innerHTML = "<span class='sticker-load-error'>Unsupported format</span>";
+                        document.getElementById(stickerElementId).innerHTML = "<span class='sticker-load-error'>Unsupported format</span>";
                     }
                 })
+            } else {
+                queuedFileReads.push(function () {
+                    document.getElementById(stickerElementId).innerHTML = `<span class='sticker-load-error'>File not found: ${sticker.file} </span>`;
+                });
             }
             stickerTableBodyHTML += `
 <tr>
