@@ -194,7 +194,7 @@ function handleFileSelect(event) {
             parseResultJSON(e.target.result)
         });
         reader.addEventListener('error', function (e) {
-            handleError('Failed to parse selected file');
+            handleError('Failed to parse selected file: ' + e);
         });
         reader.readAsText(file);
     }
