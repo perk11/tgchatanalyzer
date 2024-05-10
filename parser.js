@@ -3,6 +3,7 @@ window.addEventListener('load',function () {
     loader = document.getElementById('loader');
     output = document.getElementById('output');
     errorOutput = document.getElementById('error');
+    document.getElementById('directory-input').addEventListener('change', handleDirSelect)
 });
 const handleError = function (errorMessage) {
     document.getElementById('select-another-file').style.display = 'block';
@@ -174,20 +175,14 @@ function countWords(words) {
     }
     return uniqueWords;
 }
-function handleFileSelect(event) {
-    if (document.readyState !== 'complete') {
-        console.log("Document load hasn't finished, repeating the attempt to handle file select in 300ms")
-        setTimeout(function (){
-            handleFileSelect(event);
-        }, 300);
-        return;
-    }
+function startLoading()
+{
     loader.style.display = 'block';
     output.style.display = 'none';
     document.getElementById('file-container').style.display = 'none';
-    const file = event.target.files[0];
+}
 
-
+function readFile(file) {
     if (file) {
         const reader = new FileReader();
         reader.addEventListener('load', function (e) {
@@ -198,6 +193,43 @@ function handleFileSelect(event) {
         });
         reader.readAsText(file);
     }
+}
+
+function handleFileSelect(event) {
+    if (document.readyState !== 'complete') {
+        console.log("Document load hasn't finished, repeating the attempt to handle file select in 300ms")
+        setTimeout(function (){
+            handleFileSelect(event);
+        }, 300);
+        return;
+    }
+    startLoading();
+    const file = event.target.files[0];
+    readFile(file);
+
+}
+function handleDirSelect(event) {
+    if (document.readyState !== 'complete') {
+        console.log("Document load hasn't finished, repeating the attempt to handle file select in 300ms")
+        setTimeout(function (){
+            handleDirSelect(event);
+        }, 300);
+        return;
+    }
+    startLoading();
+    let resultJson;
+    for (const file of event.target.files) {
+        console.log(file.webkitRelativePath);
+        if (file.webkitRelativePath.endsWith('/result.json')) {
+            resultJson = file;
+            break;
+        }
+    }
+    if (resultJson === undefined) {
+        handleError('File named "result.json" not found in selected directory.');
+        return;
+    }
+    readFile(resultJson);
 
 }
 function reset() {

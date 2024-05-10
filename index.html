@@ -31,7 +31,7 @@
             float: left;
         }
 
-        #file-input {
+        #file-input, #directory-input {
             display: none;
         }
 
@@ -47,7 +47,7 @@
             margin: 10px;
         }
 
-        #file-label:hover {
+        #file-label:hover, #directory-label:hover {
             background-color: #0056b3;
         }
 
@@ -79,18 +79,23 @@
 <body>
 
 <div id="file-container" class="container">
-    <h2>Select your result.json file</h2>
-    <p>In Telegram Desktop use "Export Chat history" function. Select format JSON and select the resulting file.</p>
-    <p>The file will not be uploaded to the server, it will be processed in your browser</p>
-    <label id="file-label" class="button" for="file-input">Choose File</label>
+    <img style="float:left;" src="./export-settings.webp" alt='Screenshot of telegram export settings showing \"Stickers\" box checked, format set to "JSON" and Size limit 4000 MB'>
+    <h2>Select your Telegram history export file</h2>
+    <p>In Telegram Desktop use "Export Chat history" function. Select format "JSON". Check "Stickers" box to analyze stickers as well. To analyze stickers, you will need to select a directory instead of file.</p>
+    <p>The history will not be uploaded to the server, it will be processed in your browser</p>
+    <label id="file-label" class="button" for="file-input">Select result.json</label>
     <input type="file" id="file-input" accept=".json" onchange="handleFileSelect(event)">
+    or
+    <label id="directory-label" class="button" for="directory-input">Select Chat Export Directory</label>
+    <input type="file" webkitdirectory directory id="directory-input">
+
     <div id="settings">
 <!--        <h4>Settings</h4>-->
 <!--        <input name="max_participants" type="number" value="10">-->
     </div>
 </div>
 <div id="error" class="container"></div>
-<a id="select-another-file" class="button" style="display: none" href="javascript:reset();">Analyze another file</a>
+<a id="select-another-file" class="button" style="display: none" href="javascript:reset();">Analyze another export</a>
 <div id="loader" style="display: none" class="container">Processing...</div>
 <div id="output">
     <div class="container">
