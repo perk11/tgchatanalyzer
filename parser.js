@@ -184,6 +184,7 @@ function parseResultJSON(data) {
             let topUsersNumber = 10;
             topUsersNumber = Math.min(topUsersNumber, usersArray.length);
             for (let i = 0; i < topUsersNumber - 1; i++) {
+                //todo: fix XSS here and in top words
                 topUsers += usersArray[i][0] + ': ' + usersArray[i][1] + '<br>';
             }
             if (topUsersNumber > 0) {
@@ -191,12 +192,19 @@ function parseResultJSON(data) {
             }
             if (directoryContents.hasOwnProperty(sticker.file)) {
                 queuedFileReads.push(function () {
-                    if (sticker.file.endsWith('.webp')) {
+                    if (sticker.file.endsWith('.webp') || sticker.file.endsWith('.webm')) {
                         let reader = new FileReader();
                         reader.readAsDataURL(directoryContents[sticker.file]);
                         reader.onload = function (e) {
                             const span = document.createElement('span');
-                            span.innerHTML = `<img src="${e.target.result}" alt="Sticker"/>`;
+                            if (sticker.file.endsWith('.webp')) {
+                                span.innerHTML = `<img src="${e.target.result}" alt="Sticker">`;
+                            } else if (sticker.file.endsWith('.webm')) {
+                                span.innerHTML = `<video autoplay loop src="${e.target.result}">`;
+                            } else {
+                                document.getElementById(`sticker-${sticker.file}`).innerHTML = "<span class='sticker-load-error'>Failed to load sticker</span>";
+                                return;
+                            }
                             document.getElementById(`sticker-${sticker.file}`).appendChild(span);
                         }
                         reader.onerror = function (e) {
