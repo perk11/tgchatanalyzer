@@ -1,5 +1,5 @@
 let loader, errorOutput, output;
-let directoryContents = {};
+let directoryContents;
 window.addEventListener('load',function () {
     loader = document.getElementById('loader');
     output = document.getElementById('output');
@@ -351,6 +351,7 @@ function handleDirSelect(event) {
     }
     startLoading();
     loader.innerHTML="Reading directory...";
+    directoryContents = {};
     let resultJson;
     for (const file of event.target.files) {
         if (file.name ==='result.json') {
