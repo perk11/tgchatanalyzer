@@ -193,15 +193,36 @@ function parseResultJSON(data) {
             let stickerElementId=`sticker-${sticker.file}`;
             if (directoryContents.hasOwnProperty(sticker.file)) {
                 queuedFileReads.push(function () {
-                    if (sticker.file.endsWith('.webp') || sticker.file.endsWith('.webm')) {
+                    if (sticker.file.endsWith('.webp') || sticker.file.endsWith('.webm') || sticker.file.endsWith('.tgs')) {
                         let reader = new FileReader();
-                        reader.readAsDataURL(directoryContents[sticker.file]);
+                        if (sticker.file.endsWith('.webp') || sticker.file.endsWith('.webm')) {
+                            reader.readAsDataURL(directoryContents[sticker.file]);
+                        } else {
+                            reader.readAsArrayBuffer(directoryContents[sticker.file]);
+                        }
                         reader.onload = function (e) {
                             const span = document.createElement('span');
                             if (sticker.file.endsWith('.webp')) {
                                 span.innerHTML = `<img src="${e.target.result}" alt="Sticker">`;
                             } else if (sticker.file.endsWith('.webm')) {
                                 span.innerHTML = `<video autoplay loop src="${e.target.result}">`;
+                            } else if (sticker.file.endsWith('.tgs')) {
+                                //convert from data-uri to JSON
+                                try {
+                                    let arrayBuffer = new Uint8Array(e.target.result);
+                                    let decompressed = pako.inflate(arrayBuffer);
+                                    let text = new TextDecoder("utf-8").decode(decompressed);
+                                    let animationData = JSON.parse(text);
+                                    lottie.loadAnimation({
+                                        container: span, // the dom element
+                                        renderer: 'svg',
+                                        loop: true,
+                                        autoplay: true,
+                                        animationData: animationData,
+                                    });
+                                } catch (e) {
+                                    document.getElementById(stickerElementId).innerHTML = `<span class='sticker-load-error'>Failed to load sticker: ${e.message}</span>`;
+                                }
                             } else {
                                 document.getElementById(stickerElementId).innerHTML = "<span class='sticker-load-error'>Tried to load unsupported format</span>";
                                 return;
