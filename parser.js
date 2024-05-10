@@ -1,4 +1,5 @@
 let loader, errorOutput, output;
+let directoryContents = {};
 window.addEventListener('load',function () {
     loader = document.getElementById('loader');
     output = document.getElementById('output');
@@ -28,6 +29,7 @@ function parseResultJSON(data) {
         let lastMessageUnixTimestamp = 0;
         document.getElementById('total-messages').textContent = messagesCount;
         let authors = {};
+        let stickers = {};
         const requiredProperties = ['type', 'from', 'date_unixtime']
         messageLoop: for (let messageId = 0; messageId < messagesCount; messageId++) {
             let message = messages[messageId];
@@ -51,7 +53,25 @@ function parseResultJSON(data) {
 
             let author = message.from;
             let messageDay = formatDate(new Date(message.date_unixtime * 1000))
-            let words = countWords(parseIntoWords(message));
+            let words = {};
+            let sticker;
+            if (message.hasOwnProperty('media_type') && message.media_type === 'sticker') {
+                sticker = {};
+                if (message.hasOwnProperty('thumbnail')) {
+                    sticker.thumbnail = message.thumbnail;
+                }
+                if (message.hasOwnProperty('file')) {
+                    if (message.file === '(File not included. Change data exporting settings to download.)') {
+                        continue;
+                    }
+                    sticker.file = message.file;
+                } else {
+                    console.error(`Message ${message.id} with media_type "sticker" has no property "file"`);
+                    continue;
+                }
+            } else {
+                words = countWords(parseIntoWords(message));
+            }
             if (!authors.hasOwnProperty(author)) {
                 authors[author] = {
                     name: author,
@@ -62,6 +82,7 @@ function parseResultJSON(data) {
                         messageDay,
                     ],
                     words: words,
+                    stickers: {},
                 }
             } else {
                 let authorObj = authors[author];
@@ -77,6 +98,26 @@ function parseResultJSON(data) {
                     } else {
                         authorObj.words[word] = words[word];
                     }
+                }
+            }
+            if (sticker !== undefined) {
+                let stickerFileName = sticker.file;
+                if (stickers.hasOwnProperty(stickerFileName)) {
+                    stickers[stickerFileName].useNumber++;
+                } else {
+                    stickers[stickerFileName] = sticker;
+                    stickers[stickerFileName].useNumber = 1;
+                    stickers[stickerFileName].useByAuthor = {}
+                }
+                if (stickers[stickerFileName].useByAuthor.hasOwnProperty(author)) {
+                    stickers[stickerFileName].useByAuthor[author]++;
+                } else {
+                    stickers[stickerFileName].useByAuthor[author] = 1;
+                }
+                if (authors[author].stickers.hasOwnProperty(stickerFileName)) {
+                    authors[author].stickers[stickerFileName].useNumber++;
+                } else {
+                    authors[author].stickers[stickerFileName] = 1;
                 }
             }
             lastMessageUnixTimestamp = Math.max(message.date_unixtime, lastMessageUnixTimestamp);
@@ -95,8 +136,6 @@ function parseResultJSON(data) {
             }
             return 0;
         });
-        console.log(lastMessageUnixTimestamp);
-        console.log(authorsArray);
         for (let authorIndex = 0; authorIndex < authorsArray.length; authorIndex++) {
             let author = authorsArray[authorIndex];
             let daysSinceJoin = (lastMessageUnixTimestamp - author.firstMessage) / (3600 * 24);
@@ -123,13 +162,72 @@ function parseResultJSON(data) {
 </tr>`
         }
         document.getElementById('participants-table-body').innerHTML = participantsTableBodyHTML;
-        participantsTableBodyHTML = undefined;
 
+        loader.innerHTML="Processing stickers...";
+        let stickerTableBodyHTML = '';
+        let stickersArray = Object.values(stickers);
+        stickersArray.sort(function (a, b) {
+            if (a.useNumber > b.useNumber) {
+                return -1;
+            }
+            if (a.useNumber < b.useNumber) {
+                return 1;
+            }
+            return 0;
+        });
+        let numberOfTopStickersToDisplay = Math.min(100, stickersArray.length)
+        let queuedFileReads = [];
+        for (let stickerIndex = 0; stickerIndex < numberOfTopStickersToDisplay; stickerIndex++) {
+            let sticker = stickersArray[stickerIndex];
+            let usersArray = Object.entries(sticker.useByAuthor).sort((a, b) => b[1] - a[1]);
+            let topUsers = '';
+            let topUsersNumber = 10;
+            topUsersNumber = Math.min(topUsersNumber, usersArray.length);
+            for (let i = 0; i < topUsersNumber - 1; i++) {
+                topUsers += usersArray[i][0] + ': ' + usersArray[i][1] + '<br>';
+            }
+            if (topUsersNumber > 0) {
+                topUsers += usersArray[topUsersNumber - 1][0] + ': ' + usersArray[topUsersNumber - 1][1];
+            }
+            if (directoryContents.hasOwnProperty(sticker.file)) {
+                queuedFileReads.push(function () {
+                    if (sticker.file.endsWith('.webp')) {
+                        let reader = new FileReader();
+                        reader.readAsDataURL(directoryContents[sticker.file]);
+                        reader.onload = function (e) {
+                            const span = document.createElement('span');
+                            span.innerHTML = `<img src="${e.target.result}" alt="Sticker"/>`;
+                            document.getElementById(`sticker-${sticker.file}`).appendChild(span);
+                        }
+                        reader.onerror = function (e) {
+                            document.getElementById(`sticker-${sticker.file}`).innerHTML = "<span class='sticker-load-error'>Failed to load sticker</span>";
+                        }
+                    } else {
+                        document.getElementById(`sticker-${sticker.file}`).innerHTML = "<span class='sticker-load-error'>Unsupported format</span>";
+                    }
+                })
+            }
+            stickerTableBodyHTML += `
+<tr>
+<td>${numberFormat.format(stickerIndex + 1)}</td>
+<td id="sticker-${sticker.file}" class="sticker-display"></td>
+<td>${numberFormat.format(sticker.useNumber)}</td>
+<td>${topUsers}</td>
+</tr>`
+        }
+        document.getElementById('stickers-table-body').innerHTML = stickerTableBodyHTML;
         output.style.display = 'block';
         // error.style.display = 'none';
         loader.style.display = 'none';
         document.getElementById('select-another-file').style.display = 'block';
-
+        for (let i=0; i<queuedFileReads.length; i++) {
+            queuedFileReads[i]();
+        }
+        if (stickersArray.length === 0) {
+            document.getElementById('stickers-container').style.display = 'none';
+        } else {
+            document.getElementById('stickers-container').style.display = 'block';
+        }
     } catch (error) {
         handleError(error + "\n" + error.stack);
     }
@@ -184,6 +282,7 @@ function startLoading()
 
 function readFile(file) {
     if (file) {
+        loader.innerHTML="Processing " + file.name + '...';
         const reader = new FileReader();
         reader.addEventListener('load', function (e) {
             parseResultJSON(e.target.result)
@@ -217,12 +316,17 @@ function handleDirSelect(event) {
         return;
     }
     startLoading();
+    loader.innerHTML="Reading directory...";
     let resultJson;
     for (const file of event.target.files) {
-        console.log(file.webkitRelativePath);
-        if (file.webkitRelativePath.endsWith('/result.json')) {
+        if (file.name ==='result.json') {
             resultJson = file;
-            break;
+        } else {
+            //remove top directory and store file in directoryContents variable based on relative path for easy access later
+            let pathParts = file.webkitRelativePath.split('/');
+            pathParts = pathParts.slice(1);
+            let path = pathParts.join('/');
+            directoryContents[path] = file;
         }
     }
     if (resultJson === undefined) {
@@ -234,6 +338,7 @@ function handleDirSelect(event) {
 }
 function reset() {
     document.getElementById('loader').style.display = 'none';
+    document.getElementById('loader').innerHTML = '';
     document.getElementById('output').style.display = 'none';
     document.getElementById('error').style.display = 'none';
     document.getElementById('select-another-file').style.display = 'none';

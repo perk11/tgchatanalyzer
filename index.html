@@ -21,7 +21,7 @@
         }
 
         .container {
-            background-color: #fff;
+            background-color: #ebebeb;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -74,6 +74,9 @@
         table {
             text-align: left;
         }
+        .sticker-display img {
+            max-width: 128px;
+        }
     </style>
 </head>
 <body>
@@ -96,14 +99,30 @@
 </div>
 <div id="error" class="container"></div>
 <a id="select-another-file" class="button" style="display: none" href="javascript:reset();">Analyze another export</a>
-<div id="loader" style="display: none" class="container">Processing...</div>
+<div id="loader" style="display: none" class="container"></div>
 <div id="output">
     <div class="container">
         <h2>Stats</h2>
         <h3>Chat name: <span id="chat-name"></span></h3>
         <h3>Total messages: <span id="total-messages"></span></h3>
         <h3>Non-service messages: <span id="text-messages"></span></h3>
+        <div id="stickers-container" style="margin-top:30px;">
+            <h2>Top Stickers</h2>
+            <table>
+                <thead>
+                <tr>
+                    <td>Rank</td>
+                    <td>Sticker</td>
+                    <td>Uses</td>
+                    <td style="max-width: 50px;">Top Users</td>
+                </tr>
+                </thead>
+                <tbody id="stickers-table-body">
+                </tbody>
+            </table>
+        </div>
     </div>
+
     <div class="container">
     <h2>Participants</h2>
         <table>
