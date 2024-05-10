@@ -378,4 +378,5 @@ function reset() {
     document.getElementById('error').style.display = 'none';
     document.getElementById('select-another-file').style.display = 'none';
     document.getElementById('file-container').style.display = 'block';
+    directoryContents = {};
 }
