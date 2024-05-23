@@ -207,7 +207,6 @@ function parseResultJSON(data) {
                             } else if (sticker.file.endsWith('.webm')) {
                                 span.innerHTML = `<video autoplay loop src="${e.target.result}">`;
                             } else if (sticker.file.endsWith('.tgs')) {
-                                //convert from data-uri to JSON
                                 try {
                                     let arrayBuffer = new Uint8Array(e.target.result);
                                     let decompressed = pako.inflate(arrayBuffer);
