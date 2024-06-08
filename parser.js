@@ -30,11 +30,17 @@ function parseResultJSON(data) {
         let lastMessageUnixTimestamp = 0;
         let authors = {};
         let stickers = {};
-        const requiredProperties = ['type', 'from', 'date_unixtime']
         messageLoop: for (let messageId = 0; messageId < messagesCount; messageId++) {
+
             let message = messages[messageId];
-            if (message.hasOwnProperty('type') && message.type !== 'message') {
+            if (message.hasOwnProperty('type') && !(message.type === 'message' || message.type === 'service')) {
                 continue;
+            }
+            let requiredProperties = ['type', 'date_unixtime'];
+            if (message.type === 'message') {
+                requiredProperties.push('from');
+            } else if (message.type === 'service') {
+                requiredProperties.push('actor');
             }
             for (let requiredPropertyIndex = 0; requiredPropertyIndex < requiredProperties.length; requiredPropertyIndex++) {
                 let property = requiredProperties[requiredPropertyIndex];
@@ -48,12 +54,11 @@ function parseResultJSON(data) {
                 }
             }
 
-
-
-            let author = message.from;
+            let author = message.type === 'message' ? message.from : message.actor;
             let messageDay = formatDate(new Date(message.date_unixtime * 1000))
             let words = {};
             let sticker;
+            let countInTotalMessages = 1;
             if (message.hasOwnProperty('media_type') && message.media_type === 'sticker') {
                 sticker = {};
                 if (message.hasOwnProperty('thumbnail')) {
@@ -69,14 +74,17 @@ function parseResultJSON(data) {
                     continue;
                 }
                 stickerMessagesCount++;
-            } else {
+            } else if (message.type === 'message') {
                 words = countWords(parseIntoWords(message));
                 textMessagesCount++;
+            } else if (message.type === 'service') {
+                countInTotalMessages = 0;
+                words = {};
             }
             if (!authors.hasOwnProperty(author)) {
                 authors[author] = {
                     name: author,
-                    totalMessages: 1,
+                    totalMessages: countInTotalMessages,
                     firstMessage: message.date_unixtime,
                     lastMessage: message.date_unixtime,
                     activeDays: [
@@ -87,7 +95,7 @@ function parseResultJSON(data) {
                 }
             } else {
                 let authorObj = authors[author];
-                authorObj.totalMessages++;
+                authorObj.totalMessages += countInTotalMessages;
                 authorObj.lastMessage = Math.max(message.date_unixtime, authorObj.lastMessage);
                 authorObj.firstMessage = Math.min(message.date_unixtime, authorObj.firstMessage);
                 if (authorObj.activeDays.indexOf(messageDay) === -1) {
