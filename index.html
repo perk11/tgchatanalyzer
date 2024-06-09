@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Telegram Chat Stats</title>
-    <script src="parser.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js" integrity="sha512-g2TeAWw5GPnX7z0Kn8nFbYfeHcvAu/tx6d6mrLe/90mkCxO+RcptyYpksUz35EO337F83bZwcmUyHiHamspkfg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="parser.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -119,6 +119,10 @@
 <div id="output">
     <div class="container" style="float:none;">
         <h2>Analysis of <span id="chat-name"></span></h2>
+    </div>
+    <div class="container" style="float:none;">
+        <h2>Messages over time</h2>
+        <canvas id="messages-over-time"></canvas>
     </div>
     <div style="clear: both"></div>
     <div class="container">

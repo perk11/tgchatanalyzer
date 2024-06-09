@@ -149,7 +149,7 @@ function parseResultJSON(data) {
             let daysSinceJoin = (lastMessageUnixTimestamp - author.firstMessage) / (3600 * 24);
             let wordsArray = Object.entries(author.words).sort((a, b) => b[1] - a[1]);
             let topWords = '';
-            let topWordsNumber = 10;
+            let topWordsNumber = 3;
             topWordsNumber = Math.min(topWordsNumber, wordsArray.length);
             for (let i = 0; i < topWordsNumber - 1; i++) {
                 topWords += wordsArray[i][0] + ':' + wordsArray[i][1] + ', ';
@@ -273,9 +273,106 @@ function parseResultJSON(data) {
         } else {
             document.getElementById('stickers-container').style.display = 'block';
         }
+        createMessagesChart(messages, 'month');
     } catch (error) {
         handleError(error + "\n" + error.stack);
     }
+}
+
+function dateToPeriodLabel(date, periodType) {
+    const dateClone = new Date(date);
+    const year = dateClone.getFullYear();
+
+    // Ensure the month and day are in two-digit format
+    const month = (dateClone.getMonth() + 1).toString().padStart(2, '0');
+    const day = dateClone.getDate().toString().padStart(2, '0');
+
+    switch (periodType.toLowerCase()) {
+        case 'day':
+            return `${year}-${month}-${day}`;
+        case 'month':
+            return `${year}-${month}`;
+        case 'year':
+            return `${year}`;
+        case 'week':
+            // Calculate the first day of the week (ISO week starts on Monday)
+            const weekDay = dateClone.getDay() || 7; // Sunday is 0, convert to 7
+            dateClone.setDate(dateClone.getDate() + 1 - weekDay);
+            const weekMonth = (dateClone.getMonth() + 1).toString().padStart(2, '0');
+            const weekDayString = dateClone.getDate().toString().padStart(2, '0');
+            return `${dateClone.getFullYear()}-${weekMonth}-${weekDayString}`;
+        default:
+            throw new Error('Invalid period specified. Use "day", "month", "week", or "year".');
+    }
+}
+
+function generatePeriods(startTimestamp, endTimestamp, periodType) {
+    const start = new Date(startTimestamp * 1000);
+    const end = new Date(endTimestamp * 1000);
+    let current = new Date(start);
+    const periods = {};
+
+    while (current <= end) {
+        let key = dateToPeriodLabel(current, periodType);
+        switch (periodType.toLowerCase()) {
+            case 'day':
+                current.setDate(current.getDate() + 1);
+                break;
+            case 'month':
+                current.setMonth(current.getMonth() + 1);
+                break;
+            case 'year':
+                current.setFullYear(current.getFullYear() + 1);
+                break;
+            case 'week':
+                current.setDate(current.getDate() + 7);
+                break;
+            default:
+                throw new Error('Invalid period type specified. Use "day", "month", "week", or "year".');
+        }
+        periods[key] = 0;
+    }
+
+    return periods;
+}
+
+function createMessagesChart(messages, periodType) {
+    let messagesByPeriod = generatePeriods(messages[0].date_unixtime, messages[messages.length - 1].date_unixtime, periodType);
+    for (let messageIndex = 0; messageIndex < messages.length; messageIndex++) {
+        let messagePeriodLabel = dateToPeriodLabel(messages[messageIndex].date_unixtime * 1000, periodType);
+        if (messagesByPeriod.hasOwnProperty(messagePeriodLabel)) {
+            messagesByPeriod[messagePeriodLabel]++;
+        } else {
+            messagesByPeriod[messagePeriodLabel] = 0;
+        }
+    }
+    let labels =[];
+    let data = [];
+    for (const [key, value] of Object.entries(messagesByPeriod)) {
+        labels.push(key);
+        data.push(value);
+    }
+
+    const domElement = document.getElementById('messages-over-time');
+
+    new Chart(domElement, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '# of Messages',
+                data: data,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 
 function formatDate(date)
