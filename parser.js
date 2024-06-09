@@ -1,5 +1,6 @@
 let loader, errorOutput, output;
 let directoryContents;
+let messagesOverTimeChart;
 window.addEventListener('load',function () {
     loader = document.getElementById('loader');
     output = document.getElementById('output');
@@ -355,7 +356,7 @@ function createMessagesChart(messages, periodType) {
 
     const domElement = document.getElementById('messages-over-time');
 
-    new Chart(domElement, {
+    messagesOverTimeChart = new Chart(domElement, {
         type: 'bar',
         data: {
             labels: labels,
@@ -365,6 +366,8 @@ function createMessagesChart(messages, periodType) {
                 borderWidth: 1
             }]
         },
+        normalized: true,
+        parsing: false,
         options: {
             scales: {
                 y: {
@@ -486,5 +489,6 @@ function reset() {
     document.getElementById('error').style.display = 'none';
     document.getElementById('select-another-file').style.display = 'none';
     document.getElementById('file-container').style.display = 'block';
+    messagesOverTimeChart.destroy();
     directoryContents = {};
 }
